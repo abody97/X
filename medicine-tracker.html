@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>متتبع العلاجات</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --card: #1a2235;
+    --border: #1e2d45;
+    --accent: #00d4aa;
+    --accent2: #0099ff;
+    --accent3: #ff6b6b;
+    --text: #e8f0fe;
+    --muted: #6b7a99;
+    --success: #00d4aa;
+    --warn: #ffd166;
+    --danger: #ff6b6b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Tajawal', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,170,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,170,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 24px 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+
+  .header-icon {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin: 0 auto 16px;
+    box-shadow: 0 0 40px rgba(0,212,170,0.3);
+  }
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 100px; height: 100px;
+    background: radial-gradient(circle, rgba(0,212,170,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Form */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  @media (max-width: 560px) {
+    .form-grid { grid-template-columns: 1fr; }
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .field label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .field input, .field select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.95rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+
+  .field input:focus, .field select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,212,170,0.1);
+  }
+
+  .field input[type="color"] {
+    height: 44px;
+    padding: 4px 8px;
+    cursor: pointer;
+  }
+
+  /* Repeat checkboxes */
+  .repeat-days {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .day-btn {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-family: 'Tajawal', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .day-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+    font-weight: 700;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #000;
+    width: 100%;
+    margin-top: 16px;
+    font-size: 1rem;
+    padding: 14px;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(0,212,170,0.3);
+  }
+
+  /* Voice settings */
+  .voice-settings {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+  }
+
+  @media (max-width: 560px) {
+    .voice-settings { grid-template-columns: 1fr 1fr; }
+  }
+
+  .slider-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(0,212,170,0.4);
+  }
+
+  .btn-test {
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 10px 20px;
+    font-size: 0.85rem;
+    border-radius: 10px;
+    margin-top: 16px;
+    align-self: flex-end;
+  }
+
+  .btn-test:hover {
+    background: rgba(0,212,170,0.1);
+  }
+
+  /* Medicine list */
+  .medicine-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .med-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .med-item.taken {
+    opacity: 0.5;
+  }
+
+  .med-item.taken .med-name {
+    text-decoration: line-through;
+  }
+
+  .med-color-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 10px currentColor;
+  }
+
+  .med-info { flex: 1; }
+
+  .med-name {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 3px;
+  }
+
+  .med-meta {
+    font-size: 0.8rem;
+    color: var(--muted);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .med-meta span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .med-time {
+    font-size: 1.2rem;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    min-width: 60px;
+    text-align: center;
+  }
+
+  .med-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--muted);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    transition: all 0.2s;
+  }
+
+  .btn-icon:hover { background: var(--border); color: var(--text); }
+
+  .btn-icon.check:hover { background: rgba(0,212,170,0.2); color: var(--accent); border-color: var(--accent); }
+  .btn-icon.del:hover { background: rgba(255,107,107,0.2); color: var(--danger); border-color: var(--danger); }
+  .btn-icon.bell:hover { background: rgba(0,153,255,0.2); color: var(--accent2); border-color: var(--accent2); }
+
+  .btn-icon.active-check {
+    background: rgba(0,212,170,0.2);
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  /* Countdown */
+  .next-dose {
+    background: linear-gradient(135deg, rgba(0,212,170,0.1), rgba(0,153,255,0.05));
+    border: 1px solid rgba(0,212,170,0.2);
+    border-radius: 14px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .next-dose-icon { font-size: 2rem; }
+
+  .next-dose-info { flex: 1; }
+
+  .next-dose-label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .next-dose-name {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  .next-dose-countdown {
+    font-size: 1.8rem;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Toast */
+  #toast-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 90%;
+    max-width: 400px;
+  }
+
+  .toast {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: toastIn 0.4s ease;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  .toast.alert-toast {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(0,212,170,0.15), var(--card));
+  }
+
+  .toast-icon { font-size: 1.5rem; }
+  .toast-msg { flex: 1; font-weight: 600; font-size: 0.95rem; }
+  .toast-close {
+    background: none; border: none; color: var(--muted);
+    cursor: pointer; font-size: 1.2rem; padding: 0 4px;
+    font-family: 'Tajawal', sans-serif;
+  }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    padding: 40px;
+    color: var(--muted);
+  }
+
+  .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+
+  /* Pulse animation for next medicine */
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0,212,170,0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(0,212,170,0); }
+  }
+
+  .next-med {
+    animation: pulse-glow 2s infinite;
+    border-color: rgba(0,212,170,0.4) !important;
+  }
+
+  /* Stats bar */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .stat-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-size: 1.8rem;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  /* Current time */
+  #clock {
+    font-variant-numeric: tabular-nums;
+    font-size: 0.85rem;
+    color: var(--muted);
+    direction: ltr;
+    display: inline-block;
+  }
+</style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<div class="container">
+
+  <div class="header">
+    <div class="header-icon">💊</div>
+    <h1>متتبع العلاجات</h1>
+    <p class="subtitle">تنبيهات صوتية ذكية · لا تنسى دواءك · <span id="clock"></span></p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-box">
+      <div class="stat-num" id="stat-total" style="color:var(--accent2)">0</div>
+      <div class="stat-label">إجمالي الأدوية</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" id="stat-taken" style="color:var(--success)">0</div>
+      <div class="stat-label">تم أخذها اليوم</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" id="stat-pending" style="color:var(--warn)">0</div>
+      <div class="stat-label">متبقية اليوم</div>
+    </div>
+  </div>
+
+  <!-- Next dose -->
+  <div class="next-dose" id="next-dose-box">
+    <div class="next-dose-icon">⏰</div>
+    <div class="next-dose-info">
+      <div class="next-dose-label">الجرعة القادمة</div>
+      <div class="next-dose-name" id="next-name">لا يوجد دواء مضاف</div>
+    </div>
+    <div class="next-dose-countdown" id="next-countdown">--:--:--</div>
+  </div>
+
+  <!-- Add medicine -->
+  <div class="card">
+    <div class="card-title">➕ إضافة دواء جديد</div>
+    <div class="form-grid">
+      <div class="field">
+        <label>اسم الدواء</label>
+        <input type="text" id="med-name" placeholder="مثال: فيتامين د">
+      </div>
+      <div class="field">
+        <label>وقت التنبيه</label>
+        <input type="time" id="med-time" value="17:00">
+      </div>
+      <div class="field">
+        <label>الجرعة</label>
+        <input type="text" id="med-dose" placeholder="مثال: حبة واحدة">
+      </div>
+      <div class="field">
+        <label>اللون</label>
+        <input type="color" id="med-color" value="#00d4aa">
+      </div>
+    </div>
+    <div class="field" style="margin-top:14px">
+      <label>أيام التكرار</label>
+      <div class="repeat-days" id="repeat-days">
+        <button class="day-btn active" data-day="0">أح</button>
+        <button class="day-btn active" data-day="1">إث</button>
+        <button class="day-btn active" data-day="2">ثل</button>
+        <button class="day-btn active" data-day="3">أر</button>
+        <button class="day-btn active" data-day="4">خم</button>
+        <button class="day-btn active" data-day="5">جم</button>
+        <button class="day-btn active" data-day="6">سب</button>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="addMedicine()">✚ إضافة الدواء</button>
+  </div>
+
+  <!-- Voice settings -->
+  <div class="card">
+    <div class="card-title">🔊 إعدادات الصوت</div>
+    <div class="voice-settings">
+      <div class="slider-field">
+        <div class="slider-label"><span>السرعة</span><span id="rate-val">1.0</span></div>
+        <input type="range" id="voice-rate" min="0.5" max="2" step="0.1" value="1.0" oninput="document.getElementById('rate-val').textContent=this.value">
+      </div>
+      <div class="slider-field">
+        <div class="slider-label"><span>الحجم</span><span id="vol-val">1.0</span></div>
+        <input type="range" id="voice-vol" min="0" max="1" step="0.1" value="1.0" oninput="document.getElementById('vol-val').textContent=this.value">
+      </div>
+      <div class="slider-field">
+        <div class="slider-label"><span>الطبقة</span><span id="pitch-val">1.0</span></div>
+        <input type="range" id="voice-pitch" min="0.5" max="2" step="0.1" value="1.0" oninput="document.getElementById('pitch-val').textContent=this.value">
+      </div>
+    </div>
+    <div class="field" style="margin-top:14px">
+      <label>الصوت</label>
+      <select id="voice-select"></select>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+      <button class="btn btn-icon bell" style="width:auto;padding:10px 20px;font-size:0.85rem;" onclick="testVoice()">🔊 اختبار الصوت</button>
+      <button class="btn btn-icon" style="width:auto;padding:10px 20px;font-size:0.85rem;border-color:var(--warn);color:var(--warn);" onclick="toggleNotifications()" id="notif-btn">🔔 تفعيل الإشعارات</button>
+    </div>
+  </div>
+
+  <!-- Medicine list -->
+  <div class="card">
+    <div class="card-title">📋 قائمة الأدوية</div>
+    <div class="medicine-list" id="medicine-list">
+      <div class="empty">
+        <div class="empty-icon">💊</div>
+        <div>لم تضف أي دواء بعد</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // State
+  let medicines = JSON.parse(localStorage.getItem('meds') || '[]');
+  let takenToday = JSON.parse(localStorage.getItem('takenToday') || '{}');
+  let voices = [];
+  let alertedToday = JSON.parse(localStorage.getItem('alertedToday') || '{}');
+  let audioUnlocked = false;
+
+  // Check if new day → reset taken + alerted
+  const todayKey = new Date().toDateString();
+  if (localStorage.getItem('lastDay') !== todayKey) {
+    takenToday = {};
+    alertedToday = {};
+    localStorage.setItem('takenToday', '{}');
+    localStorage.setItem('alertedToday', '{}');
+    localStorage.setItem('lastDay', todayKey);
+  }
+
+  // Safe speech check
+  const hasSpeech = (typeof speechSynthesis !== 'undefined');
+
+  // ✅ FIX 1: Unlock audio on first user interaction
+  function unlockAudio() {
+    if (!hasSpeech || audioUnlocked) return;
+    try {
+      const utter = new SpeechSynthesisUtterance('');
+      speechSynthesis.speak(utter);
+      audioUnlocked = true;
+    } catch(e) {}
+    document.removeEventListener('click', unlockAudio);
+    document.removeEventListener('touchstart', unlockAudio);
+  }
+  document.addEventListener('click', unlockAudio);
+  document.addEventListener('touchstart', unlockAudio);
+
+  // Clock
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent = now.toLocaleTimeString('ar-SA', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // Load voices
+  function loadVoices() {
+    if (!hasSpeech) return;
+    voices = speechSynthesis.getVoices();
+    const sel = document.getElementById('voice-select');
+    sel.innerHTML = '';
+    voices.forEach((v, i) => {
+      const op = document.createElement('option');
+      op.value = i;
+      op.textContent = v.name + ' (' + v.lang + ')';
+      if (v.lang.startsWith('ar')) op.textContent = '⭐ ' + op.textContent;
+      sel.appendChild(op);
+    });
+    if (!voices.length) {
+      const op = document.createElement('option');
+      op.textContent = '⚠️ لا يوجد صوت متاح';
+      sel.appendChild(op);
+      return;
+    }
+    const arIdx = voices.findIndex(v => v.lang.startsWith('ar'));
+    if (arIdx >= 0) sel.value = arIdx;
+  }
+  if (hasSpeech) {
+    speechSynthesis.onvoiceschanged = loadVoices;
+    setTimeout(loadVoices, 300);
+  }
+
+  // Day buttons
+  document.querySelectorAll('.day-btn').forEach(btn => {
+    btn.addEventListener('click', () => btn.classList.toggle('active'));
+  });
+
+  // ✅ FIX 2: Robust speak with full safety checks
+  function speak(text) {
+    if (!hasSpeech) { showToast('⚠️', 'الصوت غير مدعوم في هذا المتصفح'); return; }
+    try {
+      speechSynthesis.cancel();
+      if (!voices.length) voices = speechSynthesis.getVoices();
+      const utter = new SpeechSynthesisUtterance(text);
+      const sel = document.getElementById('voice-select');
+      const voiceIdx = parseInt(sel.value);
+      if (voices[voiceIdx]) utter.voice = voices[voiceIdx];
+      utter.rate   = parseFloat(document.getElementById('voice-rate').value);
+      utter.volume = parseFloat(document.getElementById('voice-vol').value);
+      utter.pitch  = parseFloat(document.getElementById('voice-pitch').value);
+      utter.lang   = 'ar-SA';
+      const resumeHack = setInterval(() => {
+        if (!speechSynthesis.speaking) { clearInterval(resumeHack); return; }
+        speechSynthesis.pause();
+        speechSynthesis.resume();
+      }, 10000);
+      utter.onend   = () => clearInterval(resumeHack);
+      utter.onerror = () => clearInterval(resumeHack);
+      speechSynthesis.speak(utter);
+    } catch(e) {
+      showToast('❌', 'خطأ في تشغيل الصوت: ' + e.message);
+    }
+  }
+
+  function testVoice() {
+    const name = document.getElementById('med-name').value.trim() || 'فيتامين د';
+    speak('حان وقت تناول ' + name);
+  }
+
+  // Notifications
+  async function toggleNotifications() {
+    if (!('Notification' in window)) { showToast('❌', 'المتصفح لا يدعم الإشعارات'); return; }
+    const perm = await Notification.requestPermission();
+    const btn = document.getElementById('notif-btn');
+    if (perm === 'granted') {
+      btn.style.borderColor = 'var(--success)';
+      btn.style.color = 'var(--success)';
+      btn.textContent = '✅ الإشعارات مفعّلة';
+      showToast('✅', 'تم تفعيل الإشعارات بنجاح!');
+    } else {
+      showToast('⚠️', 'لم يتم السماح بالإشعارات');
+    }
+  }
+
+  // Add medicine
+  function addMedicine() {
+    const name = document.getElementById('med-name').value.trim();
+    const time = document.getElementById('med-time').value;
+    const dose = document.getElementById('med-dose').value.trim() || 'جرعة واحدة';
+    const color = document.getElementById('med-color').value;
+    const days = [...document.querySelectorAll('.day-btn.active')].map(b => +b.dataset.day);
+
+    if (!name) { showToast('⚠️', 'أدخل اسم الدواء'); return; }
+    if (!time) { showToast('⚠️', 'اختر وقت التنبيه'); return; }
+    if (!days.length) { showToast('⚠️', 'اختر يوم واحد على الأقل'); return; }
+
+    medicines.push({ id: Date.now(), name, time, dose, color, days });
+    saveMeds();
+    renderList();
+    showToast('✅', 'تم إضافة ' + name + ' بنجاح!');
+    document.getElementById('med-name').value = '';
+    document.getElementById('med-dose').value = '';
+  }
+
+  function saveMeds() {
+    localStorage.setItem('meds', JSON.stringify(medicines));
+    localStorage.setItem('takenToday', JSON.stringify(takenToday));
+    localStorage.setItem('alertedToday', JSON.stringify(alertedToday));
+  }
+
+  function deleteMed(id) {
+    medicines = medicines.filter(m => m.id !== id);
+    delete takenToday[id];
+    saveMeds();
+    renderList();
+    showToast('🗑️', 'تم حذف الدواء');
+  }
+
+  function toggleTaken(id) {
+    takenToday[id] = !takenToday[id];
+    saveMeds();
+    renderList();
+  }
+
+  function triggerAlert(med) {
+    speak('حان وقت تناول ' + med.name);
+    showToast('💊', 'حان وقت ' + med.name + ' · ' + med.dose, true);
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      try {
+        new Notification('⏰ دواء: ' + med.name, {
+          body: med.dose + ' - ' + med.time,
+        });
+      } catch(e) {}
+    }
+  }
+
+  // Render list
+  function renderList() {
+    const list = document.getElementById('medicine-list');
+    if (!medicines.length) {
+      list.innerHTML = '<div class="empty"><div class="empty-icon">💊</div><div>لم تضف أي دواء بعد</div></div>';
+      updateStats(); updateNextDose(); return;
+    }
+
+    const sorted = [...medicines].sort((a, b) => a.time.localeCompare(b.time));
+    list.innerHTML = sorted.map(m => {
+      const taken = !!takenToday[m.id];
+      const dayNames = ['أح','إث','ثل','أر','خم','جم','سب'];
+      const daysStr = m.days.length === 7 ? 'يومياً' : m.days.map(d => dayNames[d]).join(' · ');
+      const safeName = m.name.replace(/'/g, "\\'");
+      return `
+      <div class="med-item ${taken ? 'taken' : ''}" id="med-${m.id}">
+        <div class="med-color-dot" style="background:${m.color};color:${m.color}"></div>
+        <div class="med-info">
+          <div class="med-name">${m.name}</div>
+          <div class="med-meta">
+            <span>💊 ${m.dose}</span>
+            <span>📅 ${daysStr}</span>
+          </div>
+        </div>
+        <div class="med-time" style="color:${m.color}">${formatTime(m.time)}</div>
+        <div class="med-actions">
+          <button class="btn-icon bell" title="اختبار الصوت" onclick="speak('حان وقت تناول ${safeName}')">🔊</button>
+          <button class="btn-icon check ${taken ? 'active-check' : ''}" title="${taken ? 'إلغاء' : 'تم أخذه'}" onclick="toggleTaken(${m.id})">${taken ? '✅' : '○'}</button>
+          <button class="btn-icon del" title="حذف" onclick="deleteMed(${m.id})">🗑️</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    updateStats();
+    updateNextDose(sorted);
+  }
+
+  function formatTime(t) {
+    const [h, m] = t.split(':').map(Number);
+    const ampm = h < 12 ? 'ص' : 'م';
+    const h12 = h % 12 || 12;
+    return `${h12}:${m.toString().padStart(2,'0')} ${ampm}`;
+  }
+
+  function updateStats() {
+    const total = medicines.length;
+    const taken = Object.values(takenToday).filter(Boolean).length;
+    const pending = Math.max(0, total - taken);
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-taken').textContent = taken;
+    document.getElementById('stat-pending').textContent = pending;
+  }
+
+  function updateNextDose(sorted) {
+    if (!sorted || !sorted.length) {
+      document.getElementById('next-name').textContent = 'لا يوجد دواء مضاف';
+      document.getElementById('next-countdown').textContent = '--:--:--';
+      return;
+    }
+    const now = new Date();
+    const nowMins = now.getHours() * 60 + now.getMinutes();
+    const today = now.getDay();
+    let next = null, minDiff = Infinity;
+
+    sorted.forEach(m => {
+      if (takenToday[m.id] || !m.days.includes(today)) return;
+      const [h, min] = m.time.split(':').map(Number);
+      const medMins = h * 60 + min;
+      let diff = medMins - nowMins;
+      if (diff < 0) diff += 1440;
+      if (diff < minDiff) { minDiff = diff; next = m; }
+    });
+
+    if (!next) {
+      document.getElementById('next-name').textContent = 'تم أخذ كل الأدوية 🎉';
+      document.getElementById('next-countdown').textContent = '✓';
+      document.querySelectorAll('.med-item').forEach(el => el.classList.remove('next-med'));
+      return;
+    }
+
+    document.getElementById('next-name').textContent = next.name;
+    document.querySelectorAll('.med-item').forEach(el => el.classList.remove('next-med'));
+    const el = document.getElementById('med-' + next.id);
+    if (el) el.classList.add('next-med');
+  }
+
+  // ✅ FIX 3: Accurate countdown + alert using exact HH:MM match
+  function updateCountdown() {
+    const now = new Date();
+    const today = now.getDay();
+    const nowH = now.getHours();
+    const nowM = now.getMinutes();
+    const nowS = now.getSeconds();
+    const nowSecs = nowH * 3600 + nowM * 60 + nowS;
+
+    let next = null, minDiff = Infinity;
+
+    medicines.forEach(m => {
+      if (takenToday[m.id] || !m.days.includes(today)) return;
+      const [h, min] = m.time.split(':').map(Number);
+      const medSecs = h * 3600 + min * 60;
+      let diff = medSecs - nowSecs;
+      if (diff < 0) diff += 86400;
+      if (diff < minDiff) { minDiff = diff; next = m; }
+
+      // ✅ Trigger alert exactly when HH:MM matches and seconds = 0
+      const alertKey = m.id + '-' + todayKey + '-' + m.time;
+      if (h === nowH && min === nowM && nowS < 10 && !alertedToday[alertKey] && !takenToday[m.id]) {
+        alertedToday[alertKey] = true;
+        localStorage.setItem('alertedToday', JSON.stringify(alertedToday));
+        triggerAlert(m);
+      }
+    });
+
+    if (next) {
+      const h = Math.floor(minDiff / 3600);
+      const m = Math.floor((minDiff % 3600) / 60);
+      const s = minDiff % 60;
+      document.getElementById('next-countdown').textContent =
+        `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+    } else {
+      document.getElementById('next-countdown').textContent = '✓';
+    }
+  }
+
+  setInterval(updateCountdown, 1000);
+
+  // Toast
+  function showToast(icon, msg, isAlert = false) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'toast' + (isAlert ? ' alert-toast' : '');
+    toast.innerHTML = `<span class="toast-icon">${icon}</span><span class="toast-msg">${msg}</span><button class="toast-close" onclick="this.parentElement.remove()">×</button>`;
+    container.appendChild(toast);
+    setTimeout(() => { if(toast.parentElement) toast.remove(); }, 6000);
+  }
+
+  // Init
+  renderList();
+  updateCountdown();
+
+  // Add default vitamin D example
+  if (!medicines.length) {
+    medicines.push({ id: 1, name: 'فيتامين د', time: '17:00', dose: 'حبة واحدة', color: '#ffd166', days: [0,1,2,3,4,5,6] });
+    saveMeds();
+    renderList();
+  }
+</script>
+</body>
+</html>
